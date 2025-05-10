@@ -3,7 +3,7 @@ import re
 from urllib.parse import urljoin
 
 import requests_cache
-from bs4 import BeautifulSoup
+
 from prettytable import PrettyTable
 from tqdm import tqdm
 
@@ -17,28 +17,17 @@ from constants import (
     MAIN_DOC_URL,
     PEP_MAIN_URL,
     PEPS_NUMERICAL_URL,
-    RESPONSE_ENCODING,
     WHATS_NEW_URL
 )
 from exceptions import VersionListNotFoundError
 from outputs import control_output
-from utils import get_response, find_tag
-
-
-def fetch_and_parse(session, url):
-    """Получает страницу по URL и парсит её с помощью BeautifulSoup."""
-    response = get_response(session, url)
-    if response is None:
-        logging.warning(f"Не удалось получить страницу: {url}")
-        return None
-    response.encoding = RESPONSE_ENCODING
-    return BeautifulSoup(response.text, features='lxml')
+from utils import fetch_and_parse, find_tag
 
 
 def pep(session):
     soup = fetch_and_parse(session, PEPS_NUMERICAL_URL)
     tr_tag = soup.find_all('tr')
-    results = [('Статус', 'Количество')]
+    results = [('Статус', 'Количество'), ]
     actual_statuses = {}
     total_peps = len(tr_tag) - 1
     log_messages = []
@@ -67,10 +56,7 @@ def pep(session):
                         )
         except Exception as e:
             log_messages.append(f'Ошибка при выполнении парсера: {e}')
-    results.extend((
-        status,
-        actual_statuses[status]
-    ) for status in actual_statuses)
+    results.extend(actual_statuses.items())
     results.append(('Total', total_peps))
     for message in log_messages:
         logging.info(message)
